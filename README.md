@@ -10,3 +10,9 @@ cd pt_crm
 
 docker compose up --build -d 
 ```
+
+If you want to embed the model, here's what you need to do. After Docker is up and running, run the following command in the directory:
+
+```bash
+docker exec -it pt_crm-ollama-1 ollama pull phi3
+```
