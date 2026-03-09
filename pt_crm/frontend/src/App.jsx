@@ -166,7 +166,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const HunterRadar = ({ hunter, reportsCount }) => {
     const data = [
-        { subject: 'Impact', A: (hunter.impact || 0) * 2, fullMark: 100, displayValue: hunter.impact }, // Impact * 2 для масштаба, но показываем оригинал
+        { subject: 'Impact', A: (hunter.impact || 0) * 2, fullMark: 100, displayValue: hunter.impact }, 
         { subject: 'Signal', A: (hunter.signal || 0) * 14, fullMark: 100, displayValue: hunter.signal },
         { subject: 'Reputation', A: Math.min(hunter.reputation / 50, 100), fullMark: 100, displayValue: hunter.reputation },
         { subject: 'Activity', A: Math.min(reportsCount * 2, 100), fullMark: 100, displayValue: reportsCount },
@@ -205,7 +205,6 @@ const UserProfileModal = ({ hunter, activeTab, onClose }) => {
   const [loadingReports, setLoadingReports] = useState(true);
   const [localActiveTab, setLocalActiveTab] = useState("overview");
 
-  // Determine display stats based on the context (activeTab from parent)
   let displayReputation = hunter.reputation;
   let displaySignal = hunter.signal;
   let displayImpact = hunter.impact;
@@ -216,7 +215,6 @@ const UserProfileModal = ({ hunter, activeTab, onClose }) => {
       displayImpact = hunter.category_data["Critical Master"].impact || hunter.impact;
   }
 
-  // Create a modified hunter object for the radar chart to use
   const displayHunter = {
       ...hunter,
       reputation: displayReputation,
