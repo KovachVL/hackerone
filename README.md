@@ -2,7 +2,7 @@
 
 # Start
 
-.env.example is located in pt_crm/backend/. You can use it for testing my project. The site itself runs on port 3000, and S3 on port 9001
+.env.example is located in pt_crm/. You can use it for testing my project. The site itself runs on port 3000, and S3 on port 9001
 
 ```bash
 
