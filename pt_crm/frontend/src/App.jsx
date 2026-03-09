@@ -198,12 +198,31 @@ const HunterRadar = ({ hunter, reportsCount }) => {
     );
 };
 
-const UserProfileModal = ({ hunter, onClose }) => {
+const UserProfileModal = ({ hunter, activeTab, onClose }) => {
   const [osintResults, setOsintResults] = useState([]);
   const [reports, setReports] = useState([]);
   const [loadingOsint, setLoadingOsint] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [localActiveTab, setLocalActiveTab] = useState("overview");
+
+  // Determine display stats based on the context (activeTab from parent)
+  let displayReputation = hunter.reputation;
+  let displaySignal = hunter.signal;
+  let displayImpact = hunter.impact;
+
+  if (activeTab === "Critical Master" && hunter.category_data?.["Critical Master"]) {
+      displayReputation = hunter.category_data["Critical Master"].reputation;
+      displaySignal = hunter.category_data["Critical Master"].signal || hunter.signal;
+      displayImpact = hunter.category_data["Critical Master"].impact || hunter.impact;
+  }
+
+  // Create a modified hunter object for the radar chart to use
+  const displayHunter = {
+      ...hunter,
+      reputation: displayReputation,
+      signal: displaySignal,
+      impact: displayImpact
+  };
 
   useEffect(() => {
     setLoadingOsint(true);
@@ -252,20 +271,20 @@ const UserProfileModal = ({ hunter, onClose }) => {
         {/* Tabs */}
         <div className="flex border-b border-gray-800 bg-[#1a1a1a] shrink-0">
             <button 
-                onClick={() => setActiveTab("overview")}
-                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "overview" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+                onClick={() => setLocalActiveTab("overview")}
+                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${localActiveTab === "overview" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
             >
                 <Activity className="w-4 h-4 inline-block mr-2" /> Overview
             </button>
             <button 
-                onClick={() => setActiveTab("osint")}
-                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "osint" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+                onClick={() => setLocalActiveTab("osint")}
+                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${localActiveTab === "osint" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
             >
                 <Globe className="w-4 h-4 inline-block mr-2" /> Digital Footprint
             </button>
             <button 
-                onClick={() => setActiveTab("reports")}
-                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === "reports" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
+                onClick={() => setLocalActiveTab("reports")}
+                className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${localActiveTab === "reports" ? "border-red-500 text-white" : "border-transparent text-gray-500 hover:text-gray-300"}`}
             >
                 <FileText className="w-4 h-4 inline-block mr-2" /> Hacktivity ({reports.length})
             </button>
@@ -273,27 +292,27 @@ const UserProfileModal = ({ hunter, onClose }) => {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto">
-          {activeTab === "overview" && (
+          {localActiveTab === "overview" && (
               <div className="grid grid-cols-1 gap-6">
                   <div>
                       <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase">Performance Stats</h3>
-                      <HunterRadar hunter={hunter} reportsCount={reports.length} />
+                      <HunterRadar hunter={displayHunter} reportsCount={reports.length} />
                       
                       <div className="mt-4 grid grid-cols-2 gap-3">
                           <div className="bg-[#1a1a1a] p-3 rounded border border-gray-800">
                               <div className="text-xs text-gray-500">Signal</div>
-                              <div className="text-xl font-bold text-white">{hunter.signal || "N/A"}</div>
+                              <div className="text-xl font-bold text-white">{displaySignal || "N/A"}</div>
                           </div>
                           <div className="bg-[#1a1a1a] p-3 rounded border border-gray-800">
                               <div className="text-xs text-gray-500">Impact</div>
-                              <div className="text-xl font-bold text-white">{hunter.impact || "N/A"}</div>
+                              <div className="text-xl font-bold text-white">{displayImpact || "N/A"}</div>
                           </div>
                       </div>
                   </div>
               </div>
           )}
 
-          {activeTab === "osint" && (
+          {localActiveTab === "osint" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {loadingOsint ? (
                    Array(6).fill(0).map((_, i) => (
@@ -337,7 +356,7 @@ const UserProfileModal = ({ hunter, onClose }) => {
               </div>
           )}
 
-          {activeTab === "reports" && (
+          {localActiveTab === "reports" && (
               <div className="space-y-3">
                   {loadingReports ? (
                       Array(4).fill(0).map((_, i) => (
@@ -587,7 +606,7 @@ export default function App() {
 
       {/* User Profile Modal (Replaces SherlockModal) */}
       {selectedHunter && (
-        <UserProfileModal hunter={selectedHunter} onClose={() => setSelectedHunter(null)} />
+        <UserProfileModal hunter={selectedHunter} activeTab={activeTab} onClose={() => setSelectedHunter(null)} />
       )}
     </div>
   );
