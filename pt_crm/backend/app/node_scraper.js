@@ -11,7 +11,9 @@ const HEADERS = {
 
 export const LEADERBOARDS = [
   { key: "HIGHEST_REPUTATION_BY_ENGAGEMENT_TYPE", label: "Top Reputation" },
-  { key: "HIGH_CRIT_REPUTATION_BY_ENGAGEMENT_TYPE", label: "Critical Master" }
+  { key: "HIGH_CRIT_REPUTATION_BY_ENGAGEMENT_TYPE", label: "Critical Master" },
+  { key: "OWASP_TOP_10_BY_ENGAGEMENT_TYPE", label: "OWASP A01 (Access Control)", filter: "a1" },
+  { key: "OWASP_TOP_10_BY_ENGAGEMENT_TYPE", label: "OWASP A03 (Injection)", filter: "a3" }
 ];
 
 const QUERY_LEADERBOARD = `
@@ -131,6 +133,54 @@ query CollectivesQuery {
 }
 `;
 
+const QUERY_OWASP = `
+query OwaspTopTenByEngagementTypeLeaderboardCard($year: Int!, $quarter: Int, $first: Int, $after: String, $engagement_type: String, $user_type: String, $key: LeaderboardKeyEnum!, $filter: String) {
+  leaderboard_entries(
+    key: $key
+    year: $year
+    quarter: $quarter
+    first: $first
+    after: $after
+    filter: $filter
+    user_type: $user_type
+    engagement_type: $engagement_type
+  ) {
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+    edges {
+      node {
+        ...SharedLeaderboardFragment
+        ...OwaspTopTenByEngagementTypeLeaderboardFragment
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment SharedLeaderboardFragment on LeaderboardEntryInterface {
+  id
+  rank
+  previous_rank
+  user {
+    id
+    username
+    profile_picture(size: medium)
+    __typename
+  }
+  __typename
+}
+
+fragment OwaspTopTenByEngagementTypeLeaderboardFragment on OwaspTopTenByEngagementTypeLeaderboardEntry {
+  reputation
+  signal
+  impact
+  __typename
+}
+`;
 const QUERY_HACKTIVITY = `
 query HacktivitySearchQuery($queryString: String!, $from: Int, $size: Int, $sort: SortInput!) {
   search(
@@ -208,6 +258,9 @@ async function fetchSingleLeaderboard(keyConfig) {
     let query = QUERY_LEADERBOARD;
     if (keyConfig.key === "HIGH_CRIT_REPUTATION_BY_ENGAGEMENT_TYPE") {
         query = QUERY_HIGH_CRIT;
+    } else if (keyConfig.key === "OWASP_TOP_10_BY_ENGAGEMENT_TYPE") {
+        query = QUERY_OWASP;
+        variables.filter = keyConfig.filter;
     }
 
     try {
@@ -298,9 +351,7 @@ export async function fetchUserHacktivity(username) {
             queryString: `reporter:("${username}")`,
             from: from,
             size: size,
-            sort: { field: "latest_disclosable_activity_at", direction: "DESC" },
-            product_area: "leaderboard",
-            product_feature: "details"
+            sort: { field: "latest_disclosable_activity_at", direction: "DESC" }
         };
 
         try {
